@@ -1,0 +1,49 @@
+name: CI
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  app:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx tsc --noEmit
+      - run: npm run lint
+      - run: npm run build
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: https://ejemplo.supabase.co
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ejemplo
+
+  base-de-datos:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports: ["5432:5432"]
+        options: --health-cmd pg_isready --health-interval 5s --health-retries 10
+    env:
+      PGHOST: localhost
+      PGUSER: postgres
+      PGPASSWORD: postgres
+    steps:
+      - uses: actions/checkout@v4
+      - name: Probar reglas
+        run: |
+          psql -v ON_ERROR_STOP=1 \
+            -f supabase/tests/stub_supabase.sql \
+            -f supabase/migrations/0001_inicio.sql -f supabase/migrations/0002_avisos.sql \
+            -f supabase/tests/flujo.sql -f supabase/tests/avisos.sql | tee salida.txt
+          grep -q "t0 .*| Cerca 3km; $" salida.txt
+          grep -q "t20 .*| Cerca 3km; Medio 8km; $" salida.txt
+          grep -q "t40 .*| Cerca 3km; Medio 8km; $" salida.txt
+          grep -q "faltas_2 .*| 2 bloq=true" salida.txt
+          grep -q "bloqueado_ve .*| 0" salida.txt
