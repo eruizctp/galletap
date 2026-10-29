@@ -129,7 +129,7 @@ export default function DetallePartido() {
 
       <div className="tarjeta text-center">
         {partido.estado === "cancelado" ? (
-          <p className="font-semibold text-red-700">Partido cancelado</p>
+          <p className="font-semibold text-peligro">Partido cancelado</p>
         ) : libres > 0 ? (
           <>
             <p className="text-xl font-bold">
@@ -185,14 +185,14 @@ export default function DetallePartido() {
                 <FilaJugador jugador={p.jugador} />
                 <div className="flex gap-2">
                   <button
-                    className="btn-chico flex-1 bg-verde text-white"
+                    className="btn-chico flex-1 bg-verde text-sobre-verde"
                     disabled={libres <= 0}
                     onClick={() => accion("responder_postulacion", { p_postulacion: p.id, p_aceptar: true })}
                   >
                     Aceptar
                   </button>
                   <button
-                    className="btn-chico flex-1 border border-borde"
+                    className="btn-chico flex-1 border border-borde-control"
                     onClick={() => accion("responder_postulacion", { p_postulacion: p.id, p_aceptar: false })}
                   >
                     No esta vez
@@ -219,7 +219,7 @@ export default function DetallePartido() {
                     {perfil ? <FilaJugador jugador={perfil} rol={c.rol} /> : <p>{c.nombre}</p>}
                     {c.telefono && !yaEmpezo && (
                       <a
-                        className="btn-chico shrink-0 bg-verde text-white"
+                        className="btn-chico shrink-0 bg-verde text-sobre-verde"
                         href={enlaceWhatsapp(c.telefono, `Hola ${c.nombre}, te escribo por el partido en ${partido.cancha}`)}
                         target="_blank"
                         rel="noreferrer"
@@ -231,13 +231,13 @@ export default function DetallePartido() {
                   {soyOrganizador && yaEmpezo && post && (
                     <div className="flex gap-2">
                       <button
-                        className={`btn-chico flex-1 border ${post.asistio === true ? "border-verde bg-verde text-white" : "border-borde"}`}
+                        className={`btn-chico flex-1 border ${post.asistio === true ? "border-verde bg-verde text-sobre-verde" : "border-borde-control"}`}
                         onClick={() => accion("marcar_asistencia", { p_postulacion: post.id, p_asistio: true })}
                       >
                         Llegó
                       </button>
                       <button
-                        className={`btn-chico flex-1 border ${post.asistio === false ? "border-red-700 bg-red-700 text-white" : "border-borde"}`}
+                        className={`btn-chico flex-1 border ${post.asistio === false ? "border-peligro bg-peligro text-tarjeta" : "border-borde-control"}`}
                         onClick={() => accion("marcar_asistencia", { p_postulacion: post.id, p_asistio: false })}
                       >
                         No llegó
@@ -260,7 +260,7 @@ export default function DetallePartido() {
 
       {soyOrganizador && !yaEmpezo && partido.estado !== "cancelado" && (
         <button
-          className="btn-chico w-full text-red-700"
+          className="btn-chico w-full text-peligro"
           onClick={() => confirm("¿Cancelar el partido? Se avisará a los confirmados.") && accion("cancelar_partido", { p_partido: id })}
         >
           Cancelar partido

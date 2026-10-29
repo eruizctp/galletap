@@ -34,6 +34,12 @@ supabase/
 - Variables `VITE_*` son públicas (van al navegador). Las claves secretas (`SUPABASE_SERVICE_ROLE_KEY`, `VAPID_PRIVATE_KEY`, `CRON_SECRET`) solo en Vercel, sin prefijo.
 - Antes de abrir un PR: `cd frontend && npm run typecheck && npm run lint && npm run build`, y `supabase/tests/correr.sh` con un Postgres local.
 
+## Diseño
+
+- Design system: https://claude.ai/artifact/1wHFQs2wWPA7VUcVKjzJyU (colores, tipografía, espacios, radios, componentes y tono). Leer su README antes de crear o cambiar pantallas.
+- Los colores son variables en `frontend/src/index.css` con los mismos nombres que el design system, en tema claro y oscuro. Nunca colores fijos de Tailwind (`text-white`, `red-700`…).
+- Texto sobre `verde` en `sobre-verde`; bordes de controles en `borde-control`; horas en 24 h.
+
 ## Reglas del producto (decididas con Eduardo, 2026-10-29)
 
 - Partidos solo dentro de las próximas 24 h; 1 a 3 cupos; nivel recreativo / intermedio / competitivo.

@@ -27,7 +27,7 @@ const ZONA = "America/Santiago";
 export function horaPartido(iso: string): string {
   const fecha = new Date(iso);
   const dia = (d: Date) => d.toLocaleDateString("es-CL", { timeZone: ZONA });
-  const hora = fecha.toLocaleTimeString("es-CL", { timeZone: ZONA, hour: "2-digit", minute: "2-digit" });
+  const hora = fecha.toLocaleTimeString("es-CL", { timeZone: ZONA, hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
   const hoy = new Date();
   const manana = new Date(hoy.getTime() + 86_400_000);
   if (dia(fecha) === dia(hoy)) return `hoy ${hora}`;

@@ -53,7 +53,7 @@ export default function Organizar() {
                 <p className="text-sm text-suave">
                   {p.estado === "cancelado"
                     ? "Cancelado"
-                    : `${aceptados} confirmados${pendientes ? ` · ${pendientes} por responder 🔔` : ""}`}
+                    : `${aceptados} confirmado${aceptados === 1 ? "" : "s"}${pendientes ? ` · ${pendientes} por responder 🔔` : ""}`}
                 </p>
               }
             />

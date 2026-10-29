@@ -25,7 +25,7 @@ export default function TarjetaPartido({ id, cancha, inicio, formato, nivel, fal
             </p>
           </div>
           {faltan != null && faltan > 0 && (
-            <span className="shrink-0 rounded-full bg-verde px-3 py-1 text-sm font-semibold text-white">
+            <span className="shrink-0 rounded-full bg-verde px-3 py-1 text-sm font-semibold text-sobre-verde">
               Falta{faltan > 1 ? "n" : ""} {faltan}
             </span>
           )}
