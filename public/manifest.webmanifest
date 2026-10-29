@@ -1,0 +1,11 @@
+{
+  "name": "Galletapp",
+  "short_name": "Galletapp",
+  "description": "Completa tu pichanga con jugadores cerca de la cancha.",
+  "start_url": "/partidos",
+  "display": "standalone",
+  "background_color": "#f4f7f2",
+  "theme_color": "#1f7a3a",
+  "lang": "es-CL",
+  "icons": [{ "src": "/icono.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }]
+}
