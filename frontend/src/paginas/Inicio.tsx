@@ -15,7 +15,7 @@ export default function Inicio() {
   return (
     <div className="flex min-h-[80dvh] flex-col justify-center gap-8">
       <div>
-        <p className="text-5xl">⚽</p>
+        <img src="/logo.svg" alt="" className="h-20 w-20" />
         <h1 className="mt-4 text-3xl font-bold">¿Te faltan jugadores para la pichanga?</h1>
         <p className="mt-3 text-lg text-suave">
           Publica tu partido y Galletapp avisa a jugadores cerca de la cancha. Si no hay nadie, busca más lejos.

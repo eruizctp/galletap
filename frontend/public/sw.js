@@ -4,8 +4,8 @@ self.addEventListener("push", (event) => {
   event.waitUntil(
     self.registration.showNotification(datos.titulo || "Galletapp", {
       body: datos.cuerpo || "",
-      icon: "/icono.svg",
-      badge: "/icono.svg",
+      icon: "/icono-192.png",
+      badge: "/icono-192.png",
       tag: datos.clave,
       data: { url: datos.url || "/partidos" },
     }),
