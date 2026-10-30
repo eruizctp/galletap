@@ -1,10 +1,10 @@
 name: CI
-# Obligatorio para unir PRs a staging y main (configurar en Settings → Rules).
+# Obligatorio para unir PRs a main (configurar en Settings → Rules).
 on:
   pull_request:
-    branches: [staging, main]
+    branches: [main]
   push:
-    branches: [staging, main]
+    branches: [main]
 
 jobs:
   frontend:

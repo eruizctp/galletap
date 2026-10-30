@@ -1,19 +1,18 @@
 name: Migraciones
-# Aplica supabase/migrations al proyecto Supabase del ambiente:
-#   push a staging → ambiente "staging"   ·   push a main → ambiente "produccion"
+# Aplica supabase/migrations al proyecto Supabase al unir a main.
 # Así una migración nunca queda olvidada (en Cierra es el paso que más se olvida).
-# Secretos por ambiente (Settings → Environments): SUPABASE_PROJECT_REF y SUPABASE_DB_PASSWORD.
-# Secreto del repo: SUPABASE_ACCESS_TOKEN (supabase.com → Account → Access Tokens).
+# Secretos del repo (Settings → Secrets and variables → Actions):
+#   SUPABASE_PROJECT_REF, SUPABASE_DB_PASSWORD y SUPABASE_ACCESS_TOKEN (supabase.com → Account → Access Tokens).
+# Al lanzar al público se suma un ambiente staging con su propio proyecto.
 on:
   push:
-    branches: [staging, main]
+    branches: [main]
     paths: ["supabase/migrations/**"]
   workflow_dispatch:
 
 jobs:
   aplicar:
     runs-on: ubuntu-latest
-    environment: ${{ github.ref_name == 'main' && 'produccion' || 'staging' }}
     env:
       SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
       SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
@@ -23,7 +22,7 @@ jobs:
       - name: Revisar secretos
         run: |
           if [ -z "$SUPABASE_ACCESS_TOKEN" ] || [ -z "$SUPABASE_PROJECT_REF" ] || [ -z "$SUPABASE_DB_PASSWORD" ]; then
-            echo "::error::Faltan secretos de Supabase para el ambiente ${{ github.ref_name }}"
+            echo "::error::Faltan secretos de Supabase en los secretos del repo"
             exit 1
           fi
       - uses: supabase/setup-cli@v1

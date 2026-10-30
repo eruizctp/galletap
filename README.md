@@ -26,29 +26,29 @@ Sigue la misma forma de trabajo que Cierra, con Supabase en lugar de un backend 
 | Errores | Sentry |
 | Pruebas | GitHub Actions, obligatorio para unir |
 
-**Ambientes:** `staging` (prueba) y `main` (producción), cada uno con su propio proyecto de Supabase y sus variables en Vercel.
-Flujo: rama de trabajo → PR a `staging` → probar → PR `staging → main`. Las migraciones se aplican solas al unir.
+**Ambiente:** por ahora uno solo, `main`, con un proyecto de Supabase y Vercel. Un ambiente de prueba separado (`staging`) se suma al lanzar al público.
+Flujo: rama de trabajo → PR a `main` (con vista previa de Vercel) → unir. Las migraciones se aplican solas al unir.
 
 Reglas para quien programe: ver [CLAUDE.md](CLAUDE.md).
 
 ## Puesta en marcha (una vez)
 
-1. **Supabase:** crea dos proyectos en región São Paulo: `galletapp-staging` y `galletapp`.
-   En cada uno: Authentication → Sign In / Providers → Phone, actívalo y conecta un proveedor de SMS (Twilio, Vonage o MessageBird).
+1. **Supabase:** crea un proyecto `galletapp` en región São Paulo.
+   En Authentication → Sign In / Providers → Phone, actívalo y conecta un proveedor de SMS (Twilio, Vonage o MessageBird).
    Para probar sin pagar SMS, agrega números de prueba con código fijo en "Test phone numbers".
-2. **GitHub:** en Settings → Environments crea `staging` y `produccion`, cada uno con los secretos `SUPABASE_PROJECT_REF` y `SUPABASE_DB_PASSWORD`.
-   En Settings → Secrets agrega `SUPABASE_ACCESS_TOKEN`. Luego en Actions → Migraciones → Run workflow, una vez por rama, para crear las tablas.
-3. **Reglas de rama:** en Settings → Rules, protege `staging` y `main`: exigir PR y los checks `frontend` y `base-de-datos`.
+2. **GitHub:** en Settings → Secrets and variables → Actions agrega `SUPABASE_PROJECT_REF`, `SUPABASE_DB_PASSWORD` y `SUPABASE_ACCESS_TOKEN`.
+   Luego en Actions → Migraciones → Run workflow para crear las tablas.
+3. **Reglas de rama:** en Settings → Rules, protege `main`: exigir PR y los checks `frontend` y `base-de-datos`.
 4. **Vercel:** importa el repo con *Root Directory* `frontend`. Production Branch: `main`.
-   Variables (de `frontend/.env.example`): las de producción para *Production* y las de staging para *Preview*.
+   Variables (de `frontend/.env.example`) para *Production* y *Preview*.
    Claves de avisos: `npx web-push generate-vapid-keys`.
-5. **Avisos periódicos:** en cada proyecto Supabase activa `pg_cron` y `pg_net` y ejecuta:
+5. **Avisos periódicos:** en el proyecto Supabase activa `pg_cron` y `pg_net` y ejecuta:
 
    ```sql
    select cron.schedule('avisos-galletapp', '*/5 * * * *', $$
      select net.http_post(
-       url := 'https://DOMINIO-DEL-AMBIENTE/api/avisos',
-       headers := jsonb_build_object('Authorization', 'Bearer CRON_SECRET_DEL_AMBIENTE')
+       url := 'https://DOMINIO-DE-LA-APP/api/avisos',
+       headers := jsonb_build_object('Authorization', 'Bearer TU_CRON_SECRET')
      )
    $$);
    ```
@@ -57,7 +57,7 @@ Reglas para quien programe: ver [CLAUDE.md](CLAUDE.md).
 
 ```sh
 cd frontend
-cp .env.example .env.local   # completar con el proyecto staging
+cp .env.example .env.local   # completar con el proyecto de Supabase
 npm install
 npm run dev                  # http://localhost:5173
 ```
