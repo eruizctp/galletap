@@ -28,7 +28,7 @@ function Opciones<T extends string | number>({
           type="button"
           key={String(o.v)}
           onClick={() => onChange(o.v)}
-          className={`btn-chico flex-1 border ${valor === o.v ? "border-verde bg-verde text-white" : "border-borde bg-tarjeta"}`}
+          className={`btn-chico flex-1 border ${valor === o.v ? "border-verde bg-verde text-sobre-verde" : "border-borde-control bg-tarjeta"}`}
         >
           {o.t}
         </button>
@@ -150,7 +150,7 @@ export default function NuevoPartido() {
                   }
                 }}
               />
-              <button type="button" className="btn-chico border border-borde" onClick={buscar}>
+              <button type="button" className="btn-chico border border-borde-control" onClick={buscar}>
                 Buscar
               </button>
             </div>

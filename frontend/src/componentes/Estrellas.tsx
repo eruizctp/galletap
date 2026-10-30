@@ -11,7 +11,7 @@ export default function Estrellas({ valor, onChange }: { valor: number; onChange
           aria-checked={valor === n}
           aria-label={`${n} estrella${n > 1 ? "s" : ""}`}
           onClick={() => onChange(n)}
-          className={`text-2xl ${n <= valor ? "text-amber-500" : "text-borde"}`}
+          className={`text-2xl ${n <= valor ? "text-estrella" : "text-borde-control"}`}
         >
           ★
         </button>

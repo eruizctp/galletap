@@ -109,7 +109,7 @@ export default function PaginaPerfil() {
         </div>
       )}
       {bloqueado && (
-        <p className="rounded-xl bg-amber-100 px-4 py-3 text-sm text-amber-900">
+        <p className="rounded-xl bg-alerta-fondo px-4 py-3 text-sm text-alerta-texto">
           Tu cuenta está bloqueada hasta el {new Date(perfil!.bloqueado_hasta!).toLocaleDateString("es-CL")} por faltar a
           2 partidos.
         </p>
@@ -117,7 +117,7 @@ export default function PaginaPerfil() {
 
       <div className="flex items-center gap-4">
         <Avatar nombre={nombre || "?"} foto={foto} tam={72} />
-        <label className="btn-chico cursor-pointer border border-borde">
+        <label className="btn-chico cursor-pointer border border-borde-control">
           {foto ? "Cambiar foto" : "Subir foto"}
           <input
             type="file"

@@ -4,7 +4,7 @@ export default function Avatar({ nombre, foto, tam = 40 }: { nombre: string; fot
   return (
     <div
       style={estilo}
-      className="flex shrink-0 items-center justify-center rounded-full bg-verde font-semibold text-white"
+      className="flex shrink-0 items-center justify-center rounded-full bg-verde font-semibold text-sobre-verde"
       aria-hidden
     >
       {nombre.trim().charAt(0).toUpperCase() || "?"}
