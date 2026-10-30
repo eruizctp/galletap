@@ -6,12 +6,15 @@ import { buscarDireccion, obtenerUbicacion, type ResultadoDireccion } from "@/li
 import type { Nivel } from "@/lib/tipos";
 import { MensajeError } from "@/componentes/Aviso";
 import { despertarAvisos } from "@/lib/despertarAvisos";
+import { IconoCamiseta, IconoPin } from "@/componentes/Iconos";
+import Radar from "@/componentes/Radar";
 
 function fechaLocal(d: Date) {
   const p = (n: number) => String(n).padStart(2, "0");
   return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
 }
 
+// Control segmentado: una píldora verde se desliza hasta la opción elegida.
 function Opciones<T extends string | number>({
   valor,
   opciones,
@@ -21,18 +24,66 @@ function Opciones<T extends string | number>({
   opciones: { v: T; t: string }[];
   onChange: (v: T) => void;
 }) {
+  const indice = Math.max(
+    0,
+    opciones.findIndex((o) => o.v === valor),
+  );
   return (
-    <div className="flex gap-2">
+    <div className="relative flex rounded-2xl border border-borde-control bg-fondo-2 p-1" role="radiogroup">
+      <span
+        aria-hidden
+        className="absolute bottom-1 left-1 top-1 rounded-xl bg-verde shadow-[0_0_20px_-6px_var(--brillo)]"
+        style={{
+          width: `calc((100% - 0.5rem) / ${opciones.length})`,
+          transform: `translateX(${indice * 100}%)`,
+          transition: "transform 380ms var(--ease-rebote)",
+        }}
+      />
       {opciones.map((o) => (
         <button
           type="button"
+          role="radio"
+          aria-checked={valor === o.v}
           key={String(o.v)}
           onClick={() => onChange(o.v)}
-          className={`btn-chico flex-1 border ${valor === o.v ? "border-verde bg-verde text-sobre-verde" : "border-borde-control bg-tarjeta"}`}
+          className={`relative flex-1 rounded-xl px-2 py-2.5 text-sm font-extrabold transition-colors duration-300 ${
+            valor === o.v ? "text-sobre-verde" : "text-suave hover:text-texto"
+          }`}
         >
           {o.t}
         </button>
       ))}
+    </div>
+  );
+}
+
+// Elegir cuántos faltan tocando camisetas.
+function ElegirCupos({ valor, onChange }: { valor: 1 | 2 | 3; onChange: (v: 1 | 2 | 3) => void }) {
+  return (
+    <div className="grid grid-cols-3 gap-3" role="radiogroup" aria-label="Cuántos te faltan">
+      {([1, 2, 3] as const).map((n) => {
+        const activo = n <= valor;
+        return (
+          <button
+            type="button"
+            role="radio"
+            aria-checked={valor === n}
+            key={n}
+            onClick={() => onChange(n)}
+            className={`flex flex-col items-center gap-1 rounded-3xl border-2 py-4 transition-all duration-300 active:scale-95 ${
+              activo
+                ? "border-verde bg-verde/10 text-verde shadow-[0_0_30px_-12px_var(--brillo)]"
+                : "border-dashed border-borde-control text-suave"
+            }`}
+          >
+            <IconoCamiseta
+              className={`h-9 w-9 transition-transform duration-500 ${activo ? "scale-110" : "scale-90 opacity-60"}`}
+              style={activo ? { transitionTimingFunction: "var(--ease-rebote)" } : undefined}
+            />
+            <span className="titulo text-3xl">{n}</span>
+          </button>
+        );
+      })}
     </div>
   );
 }
@@ -83,7 +134,8 @@ export default function NuevoPartido() {
     if (dia === "manana") base.setDate(base.getDate() + 1);
     const inicio = new Date(`${fechaLocal(base)}T${hora}`);
     if (inicio.getTime() <= Date.now()) return setError("Esa hora ya pasó");
-    if (inicio.getTime() > Date.now() + 24 * 3_600_000) return setError("Solo partidos dentro de las próximas 24 horas");
+    if (inicio.getTime() > Date.now() + 24 * 3_600_000)
+      return setError("Solo partidos dentro de las próximas 24 horas");
 
     setEnviando(true);
     const { data, error } = await supabase().rpc("publicar_partido", {
@@ -104,12 +156,17 @@ export default function NuevoPartido() {
   }
 
   return (
-    <form onSubmit={publicar} className="space-y-5">
-      <h1 className="text-2xl font-bold">Me faltan jugadores</h1>
+    <form onSubmit={publicar} className="space-y-7">
+      <header className="aparece">
+        <p className="sobretitulo">Nuevo partido</p>
+        <h1 className="titulo mt-1 text-5xl">
+          Me faltan <span className="text-verde">{cupos}</span>
+        </h1>
+      </header>
 
       <div>
         <p className="etiqueta">¿Cuántos te faltan?</p>
-        <Opciones valor={cupos} onChange={setCupos} opciones={[1, 2, 3].map((n) => ({ v: n as 1 | 2 | 3, t: String(n) }))} />
+        <ElegirCupos valor={cupos} onChange={setCupos} />
       </div>
 
       <div>
@@ -129,8 +186,11 @@ export default function NuevoPartido() {
       <div className="space-y-2">
         <p className="etiqueta">¿Dónde queda?</p>
         {lugar ? (
-          <div className="tarjeta flex items-center justify-between gap-2">
-            <p className="text-sm">📍 {lugar.nombre}</p>
+          <div className="tarjeta aparece flex items-center justify-between gap-2 border-verde/40">
+            <p className="flex items-center gap-2 text-sm">
+              <IconoPin className="h-5 w-5 shrink-0 text-verde" />
+              {lugar.nombre}
+            </p>
             <button type="button" className="btn-chico text-verde" onClick={() => setLugar(null)}>
               Cambiar
             </button>
@@ -150,7 +210,7 @@ export default function NuevoPartido() {
                   }
                 }}
               />
-              <button type="button" className="btn-chico border border-borde-control" onClick={buscar}>
+              <button type="button" className="btn-chico shrink-0 border border-borde-control px-4" onClick={buscar}>
                 Buscar
               </button>
             </div>
@@ -158,7 +218,7 @@ export default function NuevoPartido() {
               <button
                 type="button"
                 key={`${r.lat},${r.lng}`}
-                className="tarjeta block w-full text-left text-sm"
+                className="tarjeta tarjeta-viva aparece block w-full text-left text-sm"
                 onClick={() => {
                   setLugar(r);
                   setResultados([]);
@@ -168,13 +228,14 @@ export default function NuevoPartido() {
               </button>
             ))}
             <button type="button" className="btn-sec" onClick={aquiMismo}>
-              Estoy en la cancha (usar mi ubicación)
+              <IconoPin className="h-5 w-5 text-verde" />
+              Estoy en la cancha
             </button>
           </>
         )}
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-[1.3fr_1fr] gap-3">
         <div>
           <p className="etiqueta">Día</p>
           <Opciones
@@ -190,7 +251,13 @@ export default function NuevoPartido() {
           <label className="etiqueta" htmlFor="hora">
             Hora
           </label>
-          <input id="hora" type="time" className="campo py-2" value={hora} onChange={(e) => setHora(e.target.value)} />
+          <input
+            id="hora"
+            type="time"
+            className="campo titulo py-2 text-center text-2xl"
+            value={hora}
+            onChange={(e) => setHora(e.target.value)}
+          />
         </div>
       </div>
 
@@ -199,7 +266,7 @@ export default function NuevoPartido() {
         <Opciones
           valor={formato}
           onChange={setFormato}
-          opciones={[5, 6, 7].map((n) => ({ v: n as 5 | 6 | 7, t: `Fútbol ${n}` }))}
+          opciones={[5, 6, 7].map((n) => ({ v: n as 5 | 6 | 7, t: `F${n}` }))}
         />
       </div>
 
@@ -208,7 +275,10 @@ export default function NuevoPartido() {
         <Opciones
           valor={nivel}
           onChange={setNivel}
-          opciones={Object.entries(NIVELES).map(([v, t]) => ({ v: v as Nivel, t }))}
+          opciones={Object.entries(NIVELES).map(([v, t]) => ({
+            v: v as Nivel,
+            t,
+          }))}
         />
       </div>
 
@@ -228,12 +298,16 @@ export default function NuevoPartido() {
       </div>
 
       <MensajeError texto={error} />
+      <div className="tarjeta flex items-center gap-4">
+        <Radar tam={84} />
+        <p className="text-sm text-suave">
+          Avisamos primero a <strong className="text-texto">5 km</strong>. Si nadie se apunta, a los 15 min ampliamos a{" "}
+          <strong className="text-texto">10 km</strong> y a los 30 min a <strong className="text-texto">20 km</strong>.
+        </p>
+      </div>
       <button className="btn text-lg" disabled={enviando}>
         {enviando ? "Publicando…" : "Publicar y buscar jugadores"}
       </button>
-      <p className="text-center text-sm text-suave">
-        Avisamos primero a 5 km. Si nadie se apunta, a los 15 min ampliamos a 10 km y a los 30 min a 20 km.
-      </p>
     </form>
   );
 }

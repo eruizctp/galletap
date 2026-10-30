@@ -1,90 +1,408 @@
 @import "tailwindcss";
+@import "@fontsource/barlow-condensed/600.css";
+@import "@fontsource/barlow-condensed/700-italic.css";
+@import "@fontsource/barlow-condensed/800-italic.css";
+@import "@fontsource-variable/manrope";
 
+/* Galletapp · "Estadio de noche"
+   Cancha oscura con luces de estadio. Verde neón = acción y cupos libres.
+   Caramelo (la galleta del logo) = marca, notas y momentos de celebración.
+   Un solo tema: la identidad de la app es nocturna. */
 :root {
-  --fondo: #f4f7f2;
-  --texto: #14210f;
-  --verde: #1f7a3a;
-  --verde-oscuro: #155c2a;
-  --tarjeta: #ffffff;
-  --borde: #dbe4d6;
-  --suave: #5b6b55;
-  --sobre-verde: #ffffff;
-  --borde-control: #7f9078;
-  --estrella: #d97706;
-  --peligro: #b91c1c;
-  --error-fondo: #fee2e2;
-  --error-texto: #991b1b;
-  --alerta-fondo: #fef3c7;
-  --alerta-texto: #78350f;
-}
+  color-scheme: dark;
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --fondo: #0f1a0d;
-    --texto: #e8f0e4;
-    --verde: #3fae5c;
-    --verde-oscuro: #2f8f49;
-    --tarjeta: #172515;
-    --borde: #2a3d26;
-    --suave: #9fb397;
-    --sobre-verde: #0f1a0d;
-    --borde-control: #5d7457;
-    --estrella: #f59e0b;
-    --peligro: #f87171;
-    --error-fondo: #3b1515;
-    --error-texto: #fecaca;
-    --alerta-fondo: #3a2a0b;
-    --alerta-texto: #fde68a;
-  }
+  --fondo: #08110b;
+  --fondo-2: #0d1a10;
+  --texto: #eef6e9;
+  --verde: #b8f53d;
+  --verde-oscuro: #93d11f;
+  --brillo: rgb(184 245 61 / 0.35);
+  --tarjeta: #111f14;
+  --tarjeta-2: #17291a;
+  --borde: #233a26;
+  --suave: #93a98d;
+  --sobre-verde: #08110b;
+  --borde-control: #3a5a3e;
+  --caramelo: #e2a95c;
+  --caramelo-oscuro: #b97f3c;
+  --estrella: #f4b860;
+  --peligro: #ff6b5e;
+  --error-fondo: #3a1411;
+  --error-texto: #ffc9c2;
+  --alerta-fondo: #3a2a0b;
+  --alerta-texto: #fde3a7;
+  --linea-cancha: rgb(238 246 233 / 0.025);
+
+  --dur-rapida: 160ms;
+  --dur-media: 420ms;
+  --dur-lenta: 900ms;
+  --ease-salida: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-rebote: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  --fuente-titulo: "Barlow Condensed", "Arial Narrow", sans-serif;
+  --fuente-texto: "Manrope Variable", system-ui, sans-serif;
 }
 
 @theme inline {
   --color-fondo: var(--fondo);
+  --color-fondo-2: var(--fondo-2);
   --color-texto: var(--texto);
   --color-verde: var(--verde);
   --color-verde-oscuro: var(--verde-oscuro);
   --color-tarjeta: var(--tarjeta);
+  --color-tarjeta-2: var(--tarjeta-2);
   --color-borde: var(--borde);
   --color-suave: var(--suave);
   --color-sobre-verde: var(--sobre-verde);
   --color-borde-control: var(--borde-control);
+  --color-caramelo: var(--caramelo);
+  --color-caramelo-oscuro: var(--caramelo-oscuro);
   --color-estrella: var(--estrella);
   --color-peligro: var(--peligro);
   --color-error-fondo: var(--error-fondo);
   --color-error-texto: var(--error-texto);
   --color-alerta-fondo: var(--alerta-fondo);
   --color-alerta-texto: var(--alerta-texto);
+  --font-titulo: var(--fuente-titulo);
+  --font-texto: var(--fuente-texto);
 }
 
-body {
+html {
   background: var(--fondo);
-  color: var(--texto);
-  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  overflow-x: clip;
 }
 
+/* Luces de estadio y franjas de pasto cortado detrás de todo. */
+body {
+  min-height: 100dvh;
+  color: var(--texto);
+  font-family: var(--fuente-texto);
+  -webkit-font-smoothing: antialiased;
+  background:
+    radial-gradient(120% 60% at 15% -10%, rgb(184 245 61 / 0.12), transparent 60%),
+    radial-gradient(90% 50% at 100% 0%, rgb(226 169 92 / 0.1), transparent 55%),
+    repeating-linear-gradient(180deg, var(--linea-cancha) 0 88px, transparent 88px 176px), var(--fondo);
+  background-attachment: fixed;
+}
+
+/* Grano sutil para que la pantalla no se vea plana. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.06;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+}
+
+#root {
+  position: relative;
+  z-index: 1;
+  overflow-x: clip;
+}
+
+.titulo {
+  font-family: var(--fuente-titulo);
+  font-style: italic;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.005em;
+  line-height: 0.92;
+}
+
+.sobretitulo {
+  @apply text-xs font-bold uppercase tracking-[0.18em] text-suave;
+}
+
+/* ---------- Botones ---------- */
 .btn {
-  @apply inline-flex w-full items-center justify-center rounded-xl bg-verde px-4 py-3 font-semibold text-sobre-verde active:bg-verde-oscuro disabled:opacity-50;
+  @apply relative inline-flex w-full items-center justify-center gap-2 overflow-hidden rounded-2xl bg-verde px-5 py-4 text-base font-extrabold text-sobre-verde disabled:opacity-50;
+  box-shadow:
+    0 0 0 1px rgb(255 255 255 / 0.15) inset,
+    0 10px 30px -10px var(--brillo);
+  transition:
+    transform var(--dur-rapida) var(--ease-salida),
+    box-shadow var(--dur-media) var(--ease-salida),
+    background-color var(--dur-rapida);
 }
+.btn::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-120%) skewX(-20deg);
+  background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.45), transparent);
+  animation: brillo-boton 3.6s var(--ease-salida) infinite 1.2s;
+}
+.btn:disabled::after {
+  animation: none;
+}
+.btn:hover:not(:disabled) {
+  box-shadow:
+    0 0 0 1px rgb(255 255 255 / 0.2) inset,
+    0 14px 40px -8px var(--brillo);
+}
+.btn:active:not(:disabled) {
+  transform: scale(0.97);
+  background: var(--verde-oscuro);
+}
+
 .btn-sec {
-  @apply inline-flex w-full items-center justify-center rounded-xl border border-borde-control bg-tarjeta px-4 py-3 font-semibold disabled:opacity-50;
+  @apply inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-borde-control bg-tarjeta/60 px-5 py-3.5 font-bold backdrop-blur disabled:opacity-50;
+  transition:
+    transform var(--dur-rapida) var(--ease-salida),
+    border-color var(--dur-rapida),
+    background-color var(--dur-rapida);
 }
+.btn-sec:hover:not(:disabled) {
+  border-color: var(--verde);
+}
+.btn-sec:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
 .btn-chico {
-  @apply inline-flex items-center justify-center rounded-lg px-3 py-2 text-sm font-semibold disabled:opacity-50;
+  @apply inline-flex items-center justify-center gap-1 rounded-xl px-3 py-2 text-sm font-bold disabled:opacity-50;
+  transition:
+    transform var(--dur-rapida) var(--ease-salida),
+    background-color var(--dur-rapida),
+    border-color var(--dur-rapida),
+    color var(--dur-rapida);
 }
+.btn-chico:active:not(:disabled) {
+  transform: scale(0.95);
+}
+
+/* ---------- Formularios ---------- */
 .campo {
-  @apply w-full rounded-xl border border-borde-control bg-tarjeta px-4 py-3 text-base outline-none focus:border-verde;
+  @apply w-full rounded-2xl border border-borde-control bg-fondo-2 px-4 py-3.5 text-base text-texto outline-none placeholder:text-suave/60;
+  transition:
+    border-color var(--dur-rapida),
+    box-shadow var(--dur-media) var(--ease-salida);
 }
+.campo:focus {
+  border-color: var(--verde);
+  box-shadow: 0 0 0 4px rgb(184 245 61 / 0.15);
+}
+select.campo {
+  appearance: none;
+  background-image:
+    linear-gradient(45deg, transparent 50%, var(--suave) 50%),
+    linear-gradient(135deg, var(--suave) 50%, transparent 50%);
+  background-position:
+    calc(100% - 22px) 50%,
+    calc(100% - 16px) 50%;
+  background-size: 6px 6px;
+  background-repeat: no-repeat;
+}
+
 .etiqueta {
-  @apply mb-1 block text-sm font-medium text-suave;
+  @apply mb-2 block text-xs font-bold uppercase tracking-[0.14em] text-suave;
 }
+
+input[type="range"] {
+  accent-color: var(--verde);
+}
+
+/* ---------- Superficies ---------- */
 .tarjeta {
-  @apply rounded-2xl border border-borde bg-tarjeta p-4;
+  @apply relative rounded-3xl border border-borde bg-tarjeta/80 p-4 backdrop-blur;
+  box-shadow: 0 20px 40px -24px rgb(0 0 0 / 0.8);
 }
+.tarjeta-viva {
+  transition:
+    transform var(--dur-media) var(--ease-salida),
+    border-color var(--dur-media);
+}
+.tarjeta-viva:hover {
+  transform: translateY(-2px);
+  border-color: var(--borde-control);
+}
+
 .chip {
-  @apply inline-block rounded-full bg-fondo px-2 py-0.5 text-xs font-medium text-suave;
+  @apply inline-flex items-center gap-1 rounded-full border border-borde bg-fondo-2 px-2.5 py-1 text-xs font-semibold text-suave;
+}
+
+/* Insignia "Faltan N" con pulso de luz. */
+.insignia-faltan {
+  @apply relative shrink-0 rounded-full bg-verde px-3 py-1.5 text-sm font-extrabold text-sobre-verde;
+  font-family: var(--fuente-titulo);
+  font-style: italic;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+.insignia-faltan::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  animation: pulso-insignia 2s ease-out infinite;
 }
 
 :focus-visible {
   outline: 2px solid var(--verde);
-  outline-offset: 2px;
+  outline-offset: 3px;
+  border-radius: 12px;
+}
+
+/* ---------- Movimiento ---------- */
+
+/* Entrada de cada pantalla: solo opacidad, porque un transform aquí
+   rompería los elementos position: fixed de adentro. */
+.entrada-pantalla {
+  animation: fundido var(--dur-media) var(--ease-salida) both;
+}
+@keyframes fundido {
+  from {
+    opacity: 0;
+  }
+}
+
+/* Entrada escalonada de los hijos directos. */
+.escalonado > * {
+  animation: subir var(--dur-media) var(--ease-salida) both;
+}
+.escalonado > *:nth-child(2) {
+  animation-delay: 60ms;
+}
+.escalonado > *:nth-child(3) {
+  animation-delay: 120ms;
+}
+.escalonado > *:nth-child(4) {
+  animation-delay: 180ms;
+}
+.escalonado > *:nth-child(5) {
+  animation-delay: 240ms;
+}
+.escalonado > *:nth-child(6) {
+  animation-delay: 300ms;
+}
+.escalonado > *:nth-child(n + 7) {
+  animation-delay: 360ms;
+}
+
+.aparece {
+  animation: subir var(--dur-media) var(--ease-salida) both;
+  animation-delay: var(--retraso, 0ms);
+}
+
+.rebota {
+  animation: rebotar var(--dur-lenta) var(--ease-rebote) both;
+  animation-delay: var(--retraso, 0ms);
+}
+
+@keyframes subir {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes rebotar {
+  0% {
+    opacity: 0;
+    transform: scale(0.4);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(1.08);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+@keyframes brillo-boton {
+  0%,
+  55% {
+    transform: translateX(-120%) skewX(-20deg);
+  }
+  100% {
+    transform: translateX(220%) skewX(-20deg);
+  }
+}
+@keyframes pulso-insignia {
+  0% {
+    box-shadow: 0 0 0 0 var(--brillo);
+  }
+  100% {
+    box-shadow: 0 0 0 12px transparent;
+  }
+}
+@keyframes girar {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes flotar {
+  0%,
+  100% {
+    transform: translateY(0) rotate(-6deg);
+  }
+  50% {
+    transform: translateY(-12px) rotate(6deg);
+  }
+}
+@keyframes radar {
+  0% {
+    transform: scale(0.15);
+    opacity: 0.9;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 0;
+  }
+}
+@keyframes trazar {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes foco {
+  0%,
+  100% {
+    opacity: 0.35;
+    transform: rotate(-10deg);
+  }
+  50% {
+    opacity: 0.75;
+    transform: rotate(10deg);
+  }
+}
+@keyframes llegar {
+  0% {
+    opacity: 0;
+    transform: translateY(18px) scale(0.6);
+  }
+  60% {
+    opacity: 1;
+    transform: translateY(-4px) scale(1.1);
+  }
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes confeti {
+  0% {
+    opacity: 1;
+    transform: translate(0, 0) rotate(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(var(--dx), var(--dy)) rotate(var(--rot));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    animation-delay: 0ms !important;
+    transition-duration: 1ms !important;
+  }
 }
