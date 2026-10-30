@@ -1,0 +1,90 @@
+@import "tailwindcss";
+
+:root {
+  --fondo: #f4f7f2;
+  --texto: #14210f;
+  --verde: #1f7a3a;
+  --verde-oscuro: #155c2a;
+  --tarjeta: #ffffff;
+  --borde: #dbe4d6;
+  --suave: #5b6b55;
+  --sobre-verde: #ffffff;
+  --borde-control: #7f9078;
+  --estrella: #d97706;
+  --peligro: #b91c1c;
+  --error-fondo: #fee2e2;
+  --error-texto: #991b1b;
+  --alerta-fondo: #fef3c7;
+  --alerta-texto: #78350f;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --fondo: #0f1a0d;
+    --texto: #e8f0e4;
+    --verde: #3fae5c;
+    --verde-oscuro: #2f8f49;
+    --tarjeta: #172515;
+    --borde: #2a3d26;
+    --suave: #9fb397;
+    --sobre-verde: #0f1a0d;
+    --borde-control: #5d7457;
+    --estrella: #f59e0b;
+    --peligro: #f87171;
+    --error-fondo: #3b1515;
+    --error-texto: #fecaca;
+    --alerta-fondo: #3a2a0b;
+    --alerta-texto: #fde68a;
+  }
+}
+
+@theme inline {
+  --color-fondo: var(--fondo);
+  --color-texto: var(--texto);
+  --color-verde: var(--verde);
+  --color-verde-oscuro: var(--verde-oscuro);
+  --color-tarjeta: var(--tarjeta);
+  --color-borde: var(--borde);
+  --color-suave: var(--suave);
+  --color-sobre-verde: var(--sobre-verde);
+  --color-borde-control: var(--borde-control);
+  --color-estrella: var(--estrella);
+  --color-peligro: var(--peligro);
+  --color-error-fondo: var(--error-fondo);
+  --color-error-texto: var(--error-texto);
+  --color-alerta-fondo: var(--alerta-fondo);
+  --color-alerta-texto: var(--alerta-texto);
+}
+
+body {
+  background: var(--fondo);
+  color: var(--texto);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+.btn {
+  @apply inline-flex w-full items-center justify-center rounded-xl bg-verde px-4 py-3 font-semibold text-sobre-verde active:bg-verde-oscuro disabled:opacity-50;
+}
+.btn-sec {
+  @apply inline-flex w-full items-center justify-center rounded-xl border border-borde-control bg-tarjeta px-4 py-3 font-semibold disabled:opacity-50;
+}
+.btn-chico {
+  @apply inline-flex items-center justify-center rounded-lg px-3 py-2 text-sm font-semibold disabled:opacity-50;
+}
+.campo {
+  @apply w-full rounded-xl border border-borde-control bg-tarjeta px-4 py-3 text-base outline-none focus:border-verde;
+}
+.etiqueta {
+  @apply mb-1 block text-sm font-medium text-suave;
+}
+.tarjeta {
+  @apply rounded-2xl border border-borde bg-tarjeta p-4;
+}
+.chip {
+  @apply inline-block rounded-full bg-fondo px-2 py-0.5 text-xs font-medium text-suave;
+}
+
+:focus-visible {
+  outline: 2px solid var(--verde);
+  outline-offset: 2px;
+}
