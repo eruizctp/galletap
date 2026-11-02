@@ -1,92 +1,62 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router";
 import { supabase } from "@/lib/supabase/navegador";
-import { mensajeError, normalizarCelular } from "@/lib/textos";
-import { MensajeError } from "@/componentes/Aviso";
-import { IconoFlecha } from "@/componentes/Iconos";
+import { mensajeError } from "@/lib/textos";
+import { Cargando, MensajeError } from "@/componentes/Aviso";
 
-const LARGO_CODIGO = 6;
-
-// Seis casillas visibles sobre un único input real (accesible y con autocompletar del SMS).
-function CasillasCodigo({ valor, onChange }: { valor: string; onChange: (v: string) => void }) {
+// Marca de Google para el botón de ingreso (colores oficiales).
+function LogoGoogle() {
   return (
-    <div className="relative">
-      <input
-        id="codigo"
-        className="absolute inset-0 z-10 h-full w-full cursor-text opacity-0"
-        inputMode="numeric"
-        autoComplete="one-time-code"
-        maxLength={LARGO_CODIGO}
-        value={valor}
-        autoFocus
-        onChange={(e) => onChange(e.target.value.replace(/\D/g, "").slice(0, LARGO_CODIGO))}
-      />
-      <div className="grid grid-cols-6 gap-2" aria-hidden>
-        {Array.from({ length: LARGO_CODIGO }, (_, i) => {
-          const digito = valor[i];
-          const actual = i === valor.length;
-          return (
-            <div
-              key={i}
-              className={`flex aspect-[3/4] items-center justify-center rounded-2xl border-2 bg-fondo-2 transition-colors duration-200 ${
-                digito ? "border-verde" : actual ? "border-texto/60" : "border-borde-control"
-              }`}
-            >
-              {digito ? (
-                <span key={digito + i} className="titulo rebota text-4xl">
-                  {digito}
-                </span>
-              ) : (
-                actual && <span className="h-7 w-0.5 bg-verde" style={{ animation: "pulso-insignia 1s infinite" }} />
-              )}
-            </div>
-          );
-        })}
-      </div>
-    </div>
+    <svg viewBox="0 0 48 48" className="h-6 w-6" aria-hidden>
+      <path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z" />
+      <path fill="#FF3D00" d="m6.3 14.7 6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z" />
+      <path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z" />
+      <path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z" />
+    </svg>
   );
 }
 
 export default function Ingresar() {
   const navegar = useNavigate();
-  const [paso, setPaso] = useState<"celular" | "codigo">("celular");
-  const [celular, setCelular] = useState("");
-  const [codigo, setCodigo] = useState("");
+  const [revisando, setRevisando] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [enviando, setEnviando] = useState(false);
 
-  async function enviarCodigo(e: React.FormEvent) {
-    e.preventDefault();
-    setError(null);
-    const telefono = normalizarCelular(celular);
-    if (!telefono) {
-      setError("Escribe un celular chileno, por ejemplo 9 1234 5678");
-      return;
+  // Al volver de Google la sesión ya viene en la dirección: si hay perfil va a
+  // los partidos; si no, a crear la ficha.
+  useEffect(() => {
+    const cliente = supabase();
+    async function seguir(uid: string) {
+      const { data: perfil } = await cliente.from("perfiles").select("id").eq("id", uid).maybeSingle();
+      navegar(perfil ? "/partidos" : "/perfil?nuevo=1", { replace: true });
     }
+    cliente.auth.getSession().then(({ data }) => {
+      if (data.session) seguir(data.session.user.id);
+      else setRevisando(false);
+    });
+    const { data } = cliente.auth.onAuthStateChange((_evento, sesion) => {
+      if (sesion) seguir(sesion.user.id);
+    });
+    const params = new URLSearchParams(window.location.search);
+    const errorGoogle = params.get("error_description");
+    if (errorGoogle) setError(`Google no pudo completar el ingreso: ${errorGoogle}`);
+    return () => data.subscription.unsubscribe();
+  }, [navegar]);
+
+  async function entrarConGoogle() {
+    setError(null);
     setEnviando(true);
-    const { error } = await supabase().auth.signInWithOtp({ phone: telefono });
-    setEnviando(false);
-    if (error) setError(mensajeError(error));
-    else setPaso("codigo");
+    const { error } = await supabase().auth.signInWithOAuth({
+      provider: "google",
+      options: { redirectTo: `${window.location.origin}/ingresar`, queryParams: { prompt: "select_account" } },
+    });
+    if (error) {
+      setEnviando(false);
+      setError(mensajeError(error));
+    }
   }
 
-  async function verificar(e: React.FormEvent) {
-    e.preventDefault();
-    setError(null);
-    setEnviando(true);
-    const { data, error } = await supabase().auth.verifyOtp({
-      phone: normalizarCelular(celular)!,
-      token: codigo.trim(),
-      type: "sms",
-    });
-    if (error || !data.user) {
-      setEnviando(false);
-      setError("El código no es correcto o ya venció");
-      return;
-    }
-    const { data: perfil } = await supabase().from("perfiles").select("id").eq("id", data.user.id).maybeSingle();
-    navegar(perfil ? "/partidos" : "/perfil?nuevo=1", { replace: true });
-  }
+  if (revisando) return <Cargando />;
 
   return (
     <div className="flex min-h-[85dvh] flex-col">
@@ -97,82 +67,28 @@ export default function Ingresar() {
         </span>
       </Link>
 
-      <div className="flex flex-1 flex-col justify-center gap-8">
-        {/* Indicador de paso */}
-        <div className="flex gap-2" aria-hidden>
-          {["celular", "codigo"].map((p, i) => (
-            <span
-              key={p}
-              className={`h-1.5 rounded-full transition-all duration-500 ${
-                paso === p || (i === 0 && paso === "codigo") ? "w-10 bg-verde" : "w-5 bg-borde-control"
-              }`}
-            />
-          ))}
+      <div className="escalonado flex flex-1 flex-col justify-center gap-8">
+        <div>
+          <p className="sobretitulo">Un toque y estás</p>
+          <h1 className="titulo mt-2 text-5xl">
+            Entra a la <span className="text-verde">cancha</span>
+          </h1>
+          <p className="mt-3 text-suave">Usa tu cuenta de Google. No hay contraseña nueva que recordar.</p>
         </div>
 
-        {paso === "celular" ? (
-          <form key="celular" onSubmit={enviarCodigo} className="escalonado space-y-6">
-            <div>
-              <p className="sobretitulo">Paso 1 de 2</p>
-              <h1 className="titulo mt-2 text-5xl">
-                Tu <span className="text-verde">celular</span>
-              </h1>
-            </div>
-            <div>
-              <label className="etiqueta" htmlFor="celular">
-                Número
-              </label>
-              <div className="flex items-stretch gap-2">
-                <span className="titulo flex items-center rounded-2xl border border-borde-control bg-fondo-2 px-4 text-2xl text-suave">
-                  +56
-                </span>
-                <input
-                  id="celular"
-                  className="campo text-xl font-bold tracking-wider"
-                  inputMode="tel"
-                  autoComplete="tel-national"
-                  placeholder="9 1234 5678"
-                  value={celular}
-                  autoFocus
-                  onChange={(e) => setCelular(e.target.value)}
-                />
-              </div>
-              <p className="mt-3 text-sm text-suave">
-                Te mandamos un código por SMS. Tu número solo lo ven los jugadores confirmados de tus partidos.
-              </p>
-            </div>
-            <MensajeError texto={error} />
-            <button className="btn text-lg" disabled={enviando}>
-              {enviando ? "Enviando…" : "Enviar código"}
-              {!enviando && <IconoFlecha className="h-5 w-5" />}
-            </button>
-          </form>
-        ) : (
-          <form key="codigo" onSubmit={verificar} className="escalonado space-y-6">
-            <div>
-              <p className="sobretitulo">Paso 2 de 2</p>
-              <h1 className="titulo mt-2 text-5xl">
-                El <span className="text-verde">código</span>
-              </h1>
-              <p className="mt-2 text-suave">
-                Llegó por SMS a <strong className="text-texto">{normalizarCelular(celular)}</strong>
-              </p>
-            </div>
-            <div>
-              <label className="sr-only" htmlFor="codigo">
-                Código de 6 dígitos
-              </label>
-              <CasillasCodigo valor={codigo} onChange={setCodigo} />
-            </div>
-            <MensajeError texto={error} />
-            <button className="btn text-lg" disabled={enviando || codigo.length < LARGO_CODIGO}>
-              {enviando ? "Verificando…" : "Entrar a la cancha"}
-            </button>
-            <button type="button" className="btn-sec" onClick={() => setPaso("celular")}>
-              Cambiar número
-            </button>
-          </form>
-        )}
+        <MensajeError texto={error} />
+
+        <button type="button" className="btn-sec min-h-14 text-lg" onClick={entrarConGoogle} disabled={enviando}>
+          <span className="flex h-9 w-9 items-center justify-center rounded-full bg-texto">
+            <LogoGoogle />
+          </span>
+          {enviando ? "Abriendo Google…" : "Continuar con Google"}
+        </button>
+
+        <p className="text-sm text-suave">
+          Después te pedimos tu celular para coordinar por WhatsApp. Solo lo ven los jugadores confirmados de tus
+          partidos.
+        </p>
       </div>
     </div>
   );

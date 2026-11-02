@@ -50,6 +50,7 @@ supabase/
 
 ## Trampas conocidas
 
-- Supabase no manda SMS reales sin un proveedor (Twilio, Vonage, MessageBird). Para probar, usar los números de prueba (`auth.sms.test_otp` en config.toml y en el panel).
+- El login es con Google (Supabase Auth). Google no entrega celular: cada jugador lo escribe en su perfil y se guarda en `celulares` (solo la ve su dueño). Sin celular no se puede publicar ni postular.
+- Una vista previa de Vercel solo puede volver de Google si su dirección está en las Redirect URLs de Supabase (comodín `galletapp-*-eruiz-6997s-projects.vercel.app/**`).
 - En iPhone los avisos web push solo funcionan si la app se agregó a la pantalla de inicio.
 - El cron de avisos (`pg_cron` + `pg_net` llamando a `/api/avisos`) se configura una vez por proyecto Supabase; ver README.

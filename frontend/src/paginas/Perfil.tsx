@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import { supabase } from "@/lib/supabase/navegador";
 import { useSesion } from "@/lib/useSesion";
-import { POSICIONES, estrellas, mensajeError } from "@/lib/textos";
+import { POSICIONES, estrellas, mensajeError, normalizarCelular } from "@/lib/textos";
 import { obtenerUbicacion } from "@/lib/ubicacion";
 import type { Posicion } from "@/lib/tipos";
 import Avatar from "@/componentes/Avatar";
@@ -17,6 +17,7 @@ export default function PaginaPerfil() {
   const [distancia, setDistancia] = useState(10);
   const [punto, setPunto] = useState<{ lat: number; lng: number } | null>(null);
   const [foto, setFoto] = useState<string | null>(null);
+  const [celular, setCelular] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [guardando, setGuardando] = useState(false);
   const [guardado, setGuardado] = useState(false);
@@ -29,6 +30,28 @@ export default function PaginaPerfil() {
     setFoto(perfil.foto_url);
     if (perfil.lat != null && perfil.lng != null) setPunto({ lat: perfil.lat, lng: perfil.lng });
   }, [perfil]);
+
+  // Celular guardado (tabla aparte, solo la ve su dueño). Si es nuevo, se
+  // proponen el nombre y la foto de su cuenta de Google.
+  useEffect(() => {
+    if (!uid) return;
+    const cliente = supabase();
+    cliente
+      .from("celulares")
+      .select("celular")
+      .eq("id", uid)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data) setCelular(data.celular.replace(/^\+56/, ""));
+      });
+    if (perfil) return;
+    cliente.auth.getUser().then(({ data }) => {
+      const meta = data.user?.user_metadata ?? {};
+      const nombreGoogle = (meta.full_name ?? meta.name ?? "") as string;
+      if (nombreGoogle) setNombre((n) => n || nombreGoogle.slice(0, 60));
+      if (meta.avatar_url) setFoto((f) => f ?? (meta.avatar_url as string));
+    });
+  }, [uid, perfil]);
 
   if (cargando) return <Cargando />;
   if (!uid) return null;
@@ -65,6 +88,11 @@ export default function PaginaPerfil() {
       setError("Escribe tu nombre");
       return;
     }
+    const telefono = normalizarCelular(celular);
+    if (!telefono) {
+      setError("Escribe tu celular chileno, por ejemplo 9 1234 5678");
+      return;
+    }
     setGuardando(true);
     const { error } = await supabase()
       .from("perfiles")
@@ -77,9 +105,12 @@ export default function PaginaPerfil() {
         lat: punto?.lat ?? null,
         lng: punto?.lng ?? null,
       });
+    const { error: errorCelular } = error
+      ? { error: null }
+      : await supabase().from("celulares").upsert({ id: uid, celular: telefono, actualizado_en: new Date().toISOString() });
     setGuardando(false);
-    if (error) {
-      setError(mensajeError(error));
+    if (error || errorCelular) {
+      setError(mensajeError(error ?? errorCelular));
       return;
     }
     if (!perfil) navegar("/partidos", { replace: true });
@@ -157,6 +188,27 @@ export default function PaginaPerfil() {
           onChange={(e) => setNombre(e.target.value)}
           maxLength={60}
         />
+      </div>
+
+      <div>
+        <label className="etiqueta" htmlFor="celular">
+          Celular para WhatsApp
+        </label>
+        <div className="flex items-stretch gap-2">
+          <span className="titulo flex items-center rounded-2xl border border-borde-control bg-fondo-2 px-4 text-2xl text-suave">
+            +56
+          </span>
+          <input
+            id="celular"
+            className="campo text-lg font-bold tracking-wider"
+            inputMode="tel"
+            autoComplete="tel-national"
+            placeholder="9 1234 5678"
+            value={celular}
+            onChange={(e) => setCelular(e.target.value)}
+          />
+        </div>
+        <p className="mt-2 text-sm text-suave">Solo lo ven el organizador y los jugadores confirmados de tus partidos.</p>
       </div>
 
       <div>
