@@ -8,9 +8,15 @@ import { despertarAvisos } from "@/lib/despertarAvisos";
 import type { Contacto, Partido, Perfil, Postulacion } from "@/lib/tipos";
 import Avatar from "@/componentes/Avatar";
 import Estrellas from "@/componentes/Estrellas";
-import { Cargando, MensajeError } from "@/componentes/Aviso";
+import { Cargando, Confeti, MensajeError } from "@/componentes/Aviso";
+import Cupos from "@/componentes/Cupos";
+import Radar from "@/componentes/Radar";
+import { IconoCompartir, IconoPin } from "@/componentes/Iconos";
 
-type PartidoConOrganizador = Partido & { organizador: Perfil; cupos_libres: number };
+type PartidoConOrganizador = Partido & {
+  organizador: Perfil;
+  cupos_libres: number;
+};
 type PostulacionConJugador = Postulacion & { jugador: Perfil };
 
 function radioActual(creado: string, ahora: number) {
@@ -43,11 +49,7 @@ export default function DetallePartido() {
     setAhora(Date.now());
     setPartido(data as PartidoConOrganizador);
     const [pos, con, cal] = await Promise.all([
-      supabase()
-        .from("postulaciones")
-        .select("*, jugador:perfiles(*)")
-        .eq("partido_id", id)
-        .order("creado_en"),
+      supabase().from("postulaciones").select("*, jugador:perfiles(*)").eq("partido_id", id).order("creado_en"),
       supabase().rpc("contactos_partido", { p_partido: id }),
       supabase().from("calificaciones").select("calificado_id, puntaje").eq("partido_id", id).eq("autor_id", uid),
     ]);
@@ -86,7 +88,7 @@ export default function DetallePartido() {
     else window.open(`https://wa.me/?text=${encodeURIComponent(`${texto} ${url}`)}`);
   }
 
-  if (noExiste) return <p className="py-10 text-center text-suave">Este partido no existe.</p>;
+  if (noExiste) return <p className="titulo py-16 text-center text-3xl text-suave">Este partido no existe</p>;
   if (cargando || !partido) return <Cargando />;
 
   const soyOrganizador = partido.organizador_id === uid;
@@ -96,30 +98,34 @@ export default function DetallePartido() {
   const pendientes = postulaciones.filter((p) => p.estado === "pendiente");
   const libres = partido.cupos_libres;
   const participo = soyOrganizador || mia?.estado === "aceptado";
-  const puedeCalificar =
-    participo && yaEmpezo && ahora - new Date(partido.inicio).getTime() < 3 * 86_400_000;
+  const puedeCalificar = participo && yaEmpezo && ahora - new Date(partido.inicio).getTime() < 3 * 86_400_000;
 
   return (
-    <div className="space-y-5">
-      <div>
-        <h1 className="text-2xl font-bold">{partido.cancha}</h1>
-        <p className="text-lg text-suave">
+    <div className="space-y-6">
+      <header className="aparece">
+        <p className="sobretitulo">
           {horaPartido(partido.inicio)} · Fútbol {partido.formato} · {NIVELES[partido.nivel]}
         </p>
+        <h1 className="titulo mt-2 text-5xl">{partido.cancha}</h1>
         {partido.direccion && (
           <a
-            className="mt-1 block text-sm text-verde underline"
+            className="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold text-verde underline-offset-4 hover:underline"
             href={`https://www.google.com/maps/search/?api=1&query=${partido.lat},${partido.lng}`}
             target="_blank"
             rel="noreferrer"
           >
-            📍 {partido.direccion}
+            <IconoPin className="h-4 w-4" />
+            {partido.direccion}
           </a>
         )}
-        {partido.notas && <p className="tarjeta mt-3">{partido.notas}</p>}
-      </div>
+        {partido.notas && (
+          <p className="mt-4 rounded-2xl border-l-4 border-caramelo bg-caramelo/10 px-4 py-3 text-sm">
+            {partido.notas}
+          </p>
+        )}
+      </header>
 
-      <div className="tarjeta flex items-center gap-3">
+      <div className="tarjeta aparece flex items-center gap-3" style={{ "--retraso": "80ms" } as React.CSSProperties}>
         <Avatar nombre={partido.organizador.nombre} foto={partido.organizador.foto_url} />
         <div>
           <p className="font-semibold">{partido.organizador.nombre}</p>
@@ -127,20 +133,35 @@ export default function DetallePartido() {
         </div>
       </div>
 
-      <div className="tarjeta text-center">
+      <div
+        className="tarjeta aparece space-y-5 overflow-hidden py-6 text-center"
+        style={{ "--retraso": "160ms" } as React.CSSProperties}
+      >
         {partido.estado === "cancelado" ? (
-          <p className="font-semibold text-peligro">Partido cancelado</p>
+          <p className="titulo text-3xl text-peligro">Partido cancelado</p>
         ) : libres > 0 ? (
           <>
-            <p className="text-xl font-bold">
-              Falta{libres > 1 ? "n" : ""} {libres} de {partido.cupos}
+            {soyOrganizador && !yaEmpezo && <Radar km={radioActual(partido.creado_en, ahora)} tam={190} />}
+            <p className="titulo text-4xl">
+              Falta{libres > 1 ? "n" : ""} <span className="text-verde">{libres}</span>
+              <span className="text-suave"> de {partido.cupos}</span>
             </p>
+            <Cupos total={partido.cupos} ocupados={partido.cupos - libres} tam="lg" />
             {soyOrganizador && !yaEmpezo && (
-              <p className="text-sm text-suave">Buscando jugadores a {radioActual(partido.creado_en, ahora)} km de la cancha</p>
+              <p className="text-sm text-suave">
+                Buscando jugadores a <strong className="text-verde">{radioActual(partido.creado_en, ahora)} km</strong>{" "}
+                de la cancha
+              </p>
             )}
           </>
         ) : (
-          <p className="text-xl font-bold text-verde">¡Equipo completo! ✅</p>
+          <div className="relative py-2">
+            <Confeti />
+            <p className="titulo rebota text-4xl text-verde">¡Equipo completo!</p>
+            <div className="mt-4">
+              <Cupos total={partido.cupos} ocupados={partido.cupos} tam="lg" />
+            </div>
+          </div>
         )}
       </div>
 
@@ -175,25 +196,38 @@ export default function DetallePartido() {
       {soyOrganizador && !yaEmpezo && partido.estado !== "cancelado" && (
         <>
           <button className="btn-sec" onClick={compartir}>
-            📣 Compartir en WhatsApp
+            <IconoCompartir className="h-5 w-5 text-verde" />
+            Compartir en WhatsApp
           </button>
           <section className="space-y-3">
-            <h2 className="font-semibold text-suave">Quieren jugar ({pendientes.length})</h2>
-            {pendientes.length === 0 && <p className="text-sm text-suave">Aún nadie. Te avisaremos cuando alguien se apunte.</p>}
+            <h2 className="sobretitulo">Quieren jugar ({pendientes.length})</h2>
+            {pendientes.length === 0 && (
+              <p className="text-sm text-suave">Aún nadie. Te avisaremos cuando alguien se apunte.</p>
+            )}
             {pendientes.map((p) => (
-              <div key={p.id} className="tarjeta space-y-3">
+              <div key={p.id} className="tarjeta aparece space-y-3 border-caramelo/40">
                 <FilaJugador jugador={p.jugador} />
                 <div className="flex gap-2">
                   <button
                     className="btn-chico flex-1 bg-verde text-sobre-verde"
                     disabled={libres <= 0}
-                    onClick={() => accion("responder_postulacion", { p_postulacion: p.id, p_aceptar: true })}
+                    onClick={() =>
+                      accion("responder_postulacion", {
+                        p_postulacion: p.id,
+                        p_aceptar: true,
+                      })
+                    }
                   >
                     Aceptar
                   </button>
                   <button
                     className="btn-chico flex-1 border border-borde-control"
-                    onClick={() => accion("responder_postulacion", { p_postulacion: p.id, p_aceptar: false })}
+                    onClick={() =>
+                      accion("responder_postulacion", {
+                        p_postulacion: p.id,
+                        p_aceptar: false,
+                      })
+                    }
                   >
                     No esta vez
                   </button>
@@ -207,7 +241,7 @@ export default function DetallePartido() {
       {/* Confirmados: contacto, asistencia y calificación */}
       {participo && contactos.length > 0 && (
         <section className="space-y-3">
-          <h2 className="font-semibold text-suave">Confirmados</h2>
+          <h2 className="sobretitulo">Confirmados</h2>
           {contactos
             .filter((c) => c.jugador_id !== uid)
             .map((c) => {
@@ -220,7 +254,10 @@ export default function DetallePartido() {
                     {c.telefono && !yaEmpezo && (
                       <a
                         className="btn-chico shrink-0 bg-verde text-sobre-verde"
-                        href={enlaceWhatsapp(c.telefono, `Hola ${c.nombre}, te escribo por el partido en ${partido.cancha}`)}
+                        href={enlaceWhatsapp(
+                          c.telefono,
+                          `Hola ${c.nombre}, te escribo por el partido en ${partido.cancha}`,
+                        )}
                         target="_blank"
                         rel="noreferrer"
                       >
@@ -232,13 +269,23 @@ export default function DetallePartido() {
                     <div className="flex gap-2">
                       <button
                         className={`btn-chico flex-1 border ${post.asistio === true ? "border-verde bg-verde text-sobre-verde" : "border-borde-control"}`}
-                        onClick={() => accion("marcar_asistencia", { p_postulacion: post.id, p_asistio: true })}
+                        onClick={() =>
+                          accion("marcar_asistencia", {
+                            p_postulacion: post.id,
+                            p_asistio: true,
+                          })
+                        }
                       >
                         Llegó
                       </button>
                       <button
                         className={`btn-chico flex-1 border ${post.asistio === false ? "border-peligro bg-peligro text-tarjeta" : "border-borde-control"}`}
-                        onClick={() => accion("marcar_asistencia", { p_postulacion: post.id, p_asistio: false })}
+                        onClick={() =>
+                          accion("marcar_asistencia", {
+                            p_postulacion: post.id,
+                            p_asistio: false,
+                          })
+                        }
                       >
                         No llegó
                       </button>
@@ -248,7 +295,11 @@ export default function DetallePartido() {
                     <Estrellas
                       valor={misNotas[c.jugador_id] ?? 0}
                       onChange={(n) =>
-                        accion("calificar", { p_partido: id, p_calificado: c.jugador_id, p_puntaje: n })
+                        accion("calificar", {
+                          p_partido: id,
+                          p_calificado: c.jugador_id,
+                          p_puntaje: n,
+                        })
                       }
                     />
                   )}
@@ -260,8 +311,11 @@ export default function DetallePartido() {
 
       {soyOrganizador && !yaEmpezo && partido.estado !== "cancelado" && (
         <button
-          className="btn-chico w-full text-peligro"
-          onClick={() => confirm("¿Cancelar el partido? Se avisará a los confirmados.") && accion("cancelar_partido", { p_partido: id })}
+          className="btn-chico w-full py-3 text-peligro hover:bg-error-fondo"
+          onClick={() =>
+            confirm("¿Cancelar el partido? Se avisará a los confirmados.") &&
+            accion("cancelar_partido", { p_partido: id })
+          }
         >
           Cancelar partido
         </button>
@@ -277,7 +331,7 @@ function FilaJugador({ jugador, rol }: { jugador: Perfil; rol?: string }) {
       <div>
         <p className="font-semibold">
           {jugador.nombre}
-          {rol === "organizador" && <span className="chip ml-2">Organiza</span>}
+          {rol === "organizador" && <span className="chip ml-2 border-caramelo/40 text-caramelo">Organiza</span>}
         </p>
         <p className="text-sm text-suave">
           {POSICIONES[jugador.posicion]} · {estrellas(jugador.calificacion_promedio)}

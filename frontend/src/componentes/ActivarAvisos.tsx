@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase/navegador";
+import { IconoCampana } from "@/componentes/Iconos";
 
 function claveBytes(base64: string) {
   const relleno = "=".repeat((4 - (base64.length % 4)) % 4);
@@ -54,8 +55,16 @@ export default function ActivarAvisos() {
 
   if (estado === "ofrecer")
     return (
-      <div className="tarjeta space-y-3">
-        <p>🔔 Activa los avisos para enterarte al tiro cuando falte gente cerca o te confirmen.</p>
+      <div className="tarjeta aparece space-y-4 border-caramelo/40 bg-gradient-to-br from-caramelo/10 to-transparent">
+        <div className="flex items-start gap-3">
+          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-caramelo/20 text-caramelo">
+            <IconoCampana className="h-6 w-6" style={{ animation: "flotar 1.6s ease-in-out infinite" }} />
+          </span>
+          <p className="text-sm">
+            <strong className="block text-base">No te pierdas ningún partido</strong>
+            Te avisamos al tiro cuando falte gente cerca o te confirmen.
+          </p>
+        </div>
         <button className="btn" onClick={activar}>
           Activar avisos
         </button>
@@ -64,7 +73,8 @@ export default function ActivarAvisos() {
   if (estado === "bloqueado")
     return (
       <p className="tarjeta text-sm text-suave">
-        Los avisos están bloqueados en este navegador. Actívalos en la configuración del sitio para no perderte partidos.
+        Los avisos están bloqueados en este navegador. Actívalos en la configuración del sitio para no perderte
+        partidos.
       </p>
     );
   if (estado === "no-soportado")
