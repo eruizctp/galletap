@@ -6,7 +6,7 @@ Piloto gratis en Santiago.
 ## Cómo funciona
 
 - **Organizador:** publica cancha, hora (próximas 24 h), formato, nivel y cuántos faltan. Acepta o rechaza a quienes se apuntan, marca asistencia y califica.
-- **Jugador:** entra con su cuenta de Google, deja su celular para coordinar por WhatsApp, arma un perfil simple (nombre, foto, posición, distancia máxima, zona) y se apunta a partidos cerca.
+- **Jugador:** entra con correo y contraseña o con su cuenta de Google, deja su celular para coordinar por WhatsApp, arma un perfil simple (nombre, foto, posición, distancia máxima, zona) y se apunta a partidos cerca.
 - **Búsqueda que se amplía:** un partido se muestra y se avisa a jugadores a 5 km; a los 15 min, a 10 km; a los 30 min, a 20 km. Nunca más lejos que la distancia máxima del jugador.
 - **Confianza:** calificaciones de 1 a 5 entre participantes. Si un confirmado no llega, cuenta como falta y una nota de 1. Con 2 faltas en 90 días queda bloqueado 14 días.
 - **Contacto:** organizador y confirmados ven sus teléfonos y se escriben por WhatsApp. El pago se hace directo al organizador.
@@ -20,7 +20,7 @@ Sigue la misma forma de trabajo que Cierra, con Supabase en lugar de un backend 
 |---|---|
 | Pantallas | React + Vite + TypeScript + Tailwind (`frontend/`) |
 | Hosting | Vercel, con vista previa por PR |
-| Base de datos, login con Google y fotos | Supabase (Postgres) |
+| Base de datos, login (correo o Google) y fotos | Supabase (Postgres) |
 | Lógica de negocio | Funciones en la base (`supabase/migrations`) |
 | Avisos | Función de Vercel `frontend/api/avisos.ts` + `pg_cron` |
 | Errores | Sentry |
