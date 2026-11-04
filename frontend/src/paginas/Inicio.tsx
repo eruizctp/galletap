@@ -81,9 +81,12 @@ export default function Inicio() {
       </ol>
 
       <div className="fixed inset-x-0 bottom-0 z-20 bg-gradient-to-t from-fondo via-fondo/90 to-transparent px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-8">
-        <div className="mx-auto max-w-md">
-          <Link to="/ingresar" className="btn text-lg">
-            Entrar con mi celular
+        <div className="mx-auto grid max-w-md grid-cols-[1fr_1.4fr] gap-3">
+          <Link to="/ingresar" className="btn-sec text-lg">
+            Entrar
+          </Link>
+          <Link to="/ingresar?modo=crear" className="btn text-lg">
+            Crear cuenta
             <IconoFlecha className="h-5 w-5" />
           </Link>
         </div>
